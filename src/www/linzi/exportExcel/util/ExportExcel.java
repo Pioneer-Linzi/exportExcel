@@ -15,21 +15,69 @@ import jxl.write.WritableSheet;
 import jxl.write.WritableWorkbook;
 
 public class ExportExcel {
+	
+	/*
+	 *各类要设置的参数 
+	 */
+	//参数列表
+	private List<String> parameterNameList;
+	//标题列名列表
+	private List<String> titleNameList;
+	//各列宽度列表
+	private List<Integer> colsizeList;
+	//标题类，用于合并列时使用
+	private List<Title> titlesList;
 
+	/**
+	 * 设置标题列名使用，列名用逗号隔开
+	 * @param titleName
+	 */
 	public void setTitle(String... titleName) {
 
 		List<String> list = new ArrayList<>();
 		for (int i = 0; i < titleName.length; i++) {
 			list.add(titleName[i]);
 		}
-
 		setTitleNameList(list);
-
 	}
 
-	private List<String> parameterNameList;
-	private List<String> titleNameList;
-	private List<Integer> colsizeList;
+	/**
+	 * 数据格式 titleName:colStart:rowStart:colEnd:rowEnd titleName 为这个格的内容
+	 * colStart这个要合并的格开始列 rowStart要合并的格的开始的行 合并两列:0:1:0:2
+	 * 
+	 * @param titleList
+	 */
+	public void setTitleList(String... titleList) {
+
+		List<Title> list = new ArrayList<>();
+		for (int i = 0; i < titleList.length; i++) {
+			String[] titlePar = titleList[i].split(":");
+			Title title = new Title();
+			title.setTitleName(titlePar[0]);
+			title.setStartCol(Integer.parseInt(titlePar[1]));
+			title.setStartRow(Integer.parseInt(titlePar[2]));
+			title.setEndCol(Integer.parseInt(titlePar[3]));
+			title.setEndRow(Integer.parseInt(titlePar[4]));
+			list.add(title);
+		}
+		setTitlesList(list);
+	}
+
+
+	/**
+	 * @return the titleList
+	 */
+	public List<Title> getTitlesList() {
+		return titlesList;
+	}
+
+	/**
+	 * @param titleList
+	 *            the titleList to set
+	 */
+	public void setTitlesList(List<Title> titlesList) {
+		this.titlesList = titlesList;
+	}
 
 	/**
 	 * @return the colsizeList
@@ -39,7 +87,8 @@ public class ExportExcel {
 	}
 
 	/**
-	 * @param colsizeList the colsizeList to set
+	 * @param colsizeList
+	 *            the colsizeList to set
 	 */
 	public void setColsizeList(List<Integer> colsizeList) {
 		this.colsizeList = colsizeList;
@@ -58,7 +107,7 @@ public class ExportExcel {
 	public List<?> getTitleNameList() {
 		return titleNameList;
 	}
-
+	//设置要输出列的属性名
 	public void setParameterName(String... parameterName) {
 		List<String> list = new ArrayList<>();
 		for (int i = 0; i < parameterName.length; i++) {
@@ -66,6 +115,7 @@ public class ExportExcel {
 		}
 		setParameterNameList(list);
 	}
+	//要设置的列的宽度，如果不设置，每行30
 	public void setColsize(Integer... colSize) {
 		List<Integer> list = new ArrayList<>();
 		for (int i = 0; i < colSize.length; i++) {
@@ -73,7 +123,6 @@ public class ExportExcel {
 		}
 		setColsizeList(list);
 	}
-	
 
 	/**
 	 * @param parameterNameList
@@ -137,26 +186,65 @@ public class ExportExcel {
 			// 标题
 			Label label = new Label(0, 0, title, titleFormat);
 			sheet.addCell(label);
-			sheet.mergeCells(0, 0, titleList.size() - 1, 0);
+			sheet.mergeCells(0, 0, parameterNameList.size() - 1, 0);
 
 			// 标题
 
-			for (int i = 0; i < titleList.size(); i++) {
-				label = new Label(i, 1, titleList.get(i).toString(),
-						titleFormattwo);
-				sheet.addCell(label);
-				if(colsizeList.get(i)!=null){
-				sheet.setColumnView(i, Integer.parseInt(colsizeList.get(i).toString()));
-				}else{
-					sheet.setColumnView(i, 30);
+			if (titlesList == null) {
+
+				for (int i = 0; i < titleList.size(); i++) {
+					label = new Label(i, 1, titleList.get(i).toString(),
+							titleFormattwo);
+					sheet.addCell(label);
+					if (colsizeList.get(i) != null) {
+						sheet.setColumnView(i,
+								Integer.parseInt(colsizeList.get(i).toString()));
+					} else {
+						sheet.setColumnView(i, 30);
+					}
+				}
+			} else {
+				for (int i = 0; i < titlesList.size(); i++) {
+					Title megtitle = titlesList.get(i);
+					label = new Label(megtitle.getStartCol(),
+							megtitle.getStartRow(), megtitle.getTitleName(),
+							titleFormattwo);
+					sheet.addCell(label);
+					System.out.println(megtitle.getTitleName());
+					sheet.mergeCells(megtitle.getStartCol(),
+							megtitle.getStartRow(), megtitle.getEndCol(),
+							megtitle.getEndRow());
+
+				}
+
+				// 设置列的宽度
+				for (int i = 0; i < parameterNameList.size(); i++) {
+					if (colsizeList != null) {
+						if (colsizeList.get(i) != null) {
+							sheet.setColumnView(i, Integer.parseInt(colsizeList
+									.get(i).toString()));
+						} else {
+							sheet.setColumnView(i, 30);
+						}
+					} else {
+						sheet.setColumnView(i, 30);
+					}
 				}
 			}
+
 			for (int i = 0; i < parameterName.size(); i++) {
-				List<?> list = Proxy.getPoxy(queries,clz,
-						parameterName.get(i));
+				List<?> list = Proxy
+						.getPoxy(queries, clz, parameterName.get(i));
+				int rowStrat;
+				if (titlesList != null) {
+					rowStrat = titlesList.get(0).getEndRow() + 1;
+				} else {
+					rowStrat = 2;
+				}
 				for (int j = 0; j < list.size(); j++) {
-					label = new Label(i, j + 2, list.get(j).toString(),
+					label = new Label(i, rowStrat, list.get(j).toString(),
 							titleFormattwo);
+					rowStrat++;
 					sheet.addCell(label);
 				}
 			}
@@ -169,5 +257,4 @@ public class ExportExcel {
 			}
 		}
 	}
-
 }
