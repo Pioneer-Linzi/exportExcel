@@ -29,6 +29,21 @@ public class ExportExcel {
 
 	private List<String> parameterNameList;
 	private List<String> titleNameList;
+	private List<Integer> colsizeList;
+
+	/**
+	 * @return the colsizeList
+	 */
+	public List<Integer> getColsizeList() {
+		return colsizeList;
+	}
+
+	/**
+	 * @param colsizeList the colsizeList to set
+	 */
+	public void setColsizeList(List<Integer> colsizeList) {
+		this.colsizeList = colsizeList;
+	}
 
 	/**
 	 * @return the parameterNameList
@@ -51,6 +66,14 @@ public class ExportExcel {
 		}
 		setParameterNameList(list);
 	}
+	public void setColsize(Integer... colSize) {
+		List<Integer> list = new ArrayList<>();
+		for (int i = 0; i < colSize.length; i++) {
+			list.add(colSize[i]);
+		}
+		setColsizeList(list);
+	}
+	
 
 	/**
 	 * @param parameterNameList
@@ -122,7 +145,11 @@ public class ExportExcel {
 				label = new Label(i, 1, titleList.get(i).toString(),
 						titleFormattwo);
 				sheet.addCell(label);
-				sheet.setColumnView(0, 30);// 样式宽度
+				if(colsizeList.get(i)!=null){
+				sheet.setColumnView(i, Integer.parseInt(colsizeList.get(i).toString()));
+				}else{
+					sheet.setColumnView(i, 30);
+				}
 			}
 			for (int i = 0; i < parameterName.size(); i++) {
 				List<?> list = Proxy.getPoxy(queries,clz,
