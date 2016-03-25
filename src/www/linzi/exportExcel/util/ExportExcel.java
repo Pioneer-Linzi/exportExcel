@@ -196,12 +196,14 @@ public class ExportExcel {
 					label = new Label(i, 1, titleList.get(i).toString(),
 							titleFormattwo);
 					sheet.addCell(label);
+					if(colsizeList!=null){
 					if (colsizeList.get(i) != null) {
 						sheet.setColumnView(i,
 								Integer.parseInt(colsizeList.get(i).toString()));
 					} else {
 						sheet.setColumnView(i, 30);
 					}
+				}
 				}
 			} else {
 				for (int i = 0; i < titlesList.size(); i++) {
