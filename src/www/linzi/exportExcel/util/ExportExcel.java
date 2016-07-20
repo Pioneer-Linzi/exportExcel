@@ -17,7 +17,8 @@ import jxl.write.WritableWorkbook;
 public class ExportExcel {
 	
 	/*
-	 *各类要设置的参数 
+	 *各类要设置的参数
+	 *
 	 */
 	//参数列表
 	private List<String> parameterNameList;
